@@ -3,59 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic WebP Image Gallery</title>
+    <title>Image Gallery</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.min.css" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
             margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
             padding: 20px;
         }
         h1 {
             text-align: center;
-            color: #333;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2.5em;
         }
         #gallery {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             gap: 20px;
+            padding: 20px;
         }
         .image-container {
             background-color: white;
-            border-radius: 8px;
+            border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             overflow: hidden;
-            transition: transform 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         .image-container:hover {
-            transform: scale(1.05);
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
         }
         .image-container img {
-            max-width: 300px;
-            max-height: 300px;
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
             display: block;
         }
         .image-name {
             padding: 10px;
             text-align: center;
             font-size: 14px;
-            color: #666;
+            color: #34495e;
+            background-color: #ecf0f1;
+        }
+        #loading {
+            text-align: center;
+            font-size: 18px;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <h1>Dynamic WebP Image Gallery</h1>
-    <div id="gallery"></div>
+    <div class="container">
+        <h1>Enhanced Dynamic WebP Image Gallery</h1>
+        <div id="gallery"></div>
+        <div id="loading">Loading images...</div>
+    </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox-plus-jquery.min.js"></script>
     <script>
         const baseUrl = 'https://cdn.jsdelivr.net/gh/inscrib/picx-images-hosting@master/image/';
-        const rawGitHubUrl = 'https://cdn.jsdelivr.net/gh/inscrib/picx-images-hosting@master/image/';
         const gallery = document.getElementById('gallery');
+        const loading = document.getElementById('loading');
 
         async function fetchImageList() {
             try {
-                const response = await fetch(rawGitHubUrl);
+                const response = await fetch(baseUrl);
                 if (!response.ok) throw new Error('Failed to fetch directory content');
                 const text = await response.text();
                 const parser = new DOMParser();
@@ -75,6 +96,11 @@
             const container = document.createElement('div');
             container.className = 'image-container';
             
+            const link = document.createElement('a');
+            link.href = baseUrl + imageName;
+            link.setAttribute('data-lightbox', 'gallery');
+            link.setAttribute('data-title', imageName);
+            
             const img = document.createElement('img');
             img.src = baseUrl + imageName;
             img.alt = imageName;
@@ -84,18 +110,24 @@
             nameDiv.className = 'image-name';
             nameDiv.textContent = imageName;
             
-            container.appendChild(img);
+            link.appendChild(img);
+            container.appendChild(link);
             container.appendChild(nameDiv);
             gallery.appendChild(container);
         }
 
         async function loadImages() {
             const images = await fetchImageList();
+            loading.style.display = 'none';
             if (images.length === 0) {
                 gallery.innerHTML = '<p>No images found or error loading images.</p>';
                 return;
             }
             images.forEach(createImageElement);
+            lightbox.option({
+                'resizeDuration': 200,
+                'wrapAround': true
+            });
         }
 
         loadImages();
